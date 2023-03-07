@@ -1,66 +1,61 @@
 package projet.aoc.strategy;
 
+import projet.aoc.Afficheur;
 import projet.aoc.Canal;
 import projet.aoc.Capteur;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 
 public class Atomique implements AlgoDiffusion {
 
-    List<Thread> runnableList;
-    HashMap<Canal, Boolean> canalBoolMap;
+    Integer value;
+    Capteur capteur;
+    ArrayList<Afficheur> finished;
+    List<Canal> toUpdate;
 
     public Atomique(){
         super();
-        this.runnableList = new ArrayList<>();
-        this.canalBoolMap = new HashMap<>();
+        this.value = 0;
+        this.finished = new ArrayList<>();
     }
 
     @Override
-    public void execute(Capteur capteur) throws InterruptedException {
+    public void valueWritten(Capteur capteur) throws InterruptedException {
 
-        capteur.setLock(true);
+        this.toUpdate = capteur.getCanalList();
+        this.capteur = capteur;
+        if (!capteur.getLock()) {
 
-        capteur.getCanalList().forEach(
-                canal -> {
-                    canalBoolMap.put(canal, false);
-                    Thread thread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Future future = canal.update(capteur);
+            this.value++;
+            System.out.println("tick");
+            capteur.setLock(true);
+            ExecutorService executor = Executors.newFixedThreadPool(this.toUpdate.size());
 
-                            while(!future.isDone()) {
-                                try {
-                                    Thread.sleep(1000);
-                                } catch (InterruptedException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            }
-                            canalBoolMap.replace(canal, true);
-                        }
-                    });
-                    runnableList.add(thread);
-                }
-        );
-
-        runnableList.forEach(Thread::start);
-
-        while(!unlock(canalBoolMap.values())){
-            Thread.sleep(1000);
+            this.toUpdate.forEach(
+                    canal -> {
+                        executor.execute(() -> {
+                            canal.update(capteur);
+                        });
+                    }
+            );
+            executor.shutdown();
         }
-        runnableList.clear();
-        System.out.println("unlock");
-        capteur.setLock(false);
-
     }
 
-    boolean unlock(Collection<Boolean> booleans){
-        for(boolean b : booleans) if(!b) return false;
-        return true;
+    @Override
+    public Integer valueRead(Afficheur afficheur) throws InterruptedException {
+        this.finished.add(afficheur);
+        if(finished.size() == toUpdate.size()){
+            finished.clear();
+            capteur.setLock(false);
+        }
+        return value;
     }
+
 }

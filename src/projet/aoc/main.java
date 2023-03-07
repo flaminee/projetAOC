@@ -13,7 +13,7 @@ public class main {
 
         ArrayList<Canal> canalList = new ArrayList<>();
 
-        ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(20);
 
         Afficheur afficheur1 = new Afficheur("Afficheur 1");
         Afficheur afficheur2 = new Afficheur("Afficheur 2");
@@ -34,7 +34,6 @@ public class main {
                 throw new RuntimeException(e);
             }
         }, 0,1000, TimeUnit.MILLISECONDS);
-
 
     }
 }

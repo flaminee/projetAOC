@@ -9,35 +9,33 @@ import java.util.*;
 
 public class Capteur {
 
-    Integer value;
+
     List<Canal> canalList;
     AlgoDiffusion algoDiffusion;
     boolean lock;
 
     Capteur(List<Canal> canalList, AlgoDiffusion algoDiffusion) {
         this.canalList = canalList;
-        this.value = 0;
         this.algoDiffusion = algoDiffusion;
         this.lock = false;
     }
 
-    int getValue() {
-        return value;
+    public int getValue(Afficheur afficheur) throws InterruptedException {
+        return algoDiffusion.valueRead(afficheur);
     }
 
     void tick() throws InterruptedException {
-        this.value++;
-        if (!lock) {
-            algoDiffusion.execute(this);
-        }
+        algoDiffusion.valueWritten(this);
     }
 
     public void setLock(boolean lock) {
         this.lock = lock;
     }
+    public boolean getLock() {
+        return lock;
+    }
 
     public List<Canal> getCanalList() {
         return canalList;
     }
-
 }

@@ -10,7 +10,6 @@ public class Canal {
     private ScheduledExecutorService scheduler;
     private Afficheur afficheur;
     private Capteur capteur;
-
     private Random random;
 
     Canal(Afficheur afficheur){
@@ -20,24 +19,24 @@ public class Canal {
         this.random = new Random();
     }
 
-    public Future update(Capteur capteur){
+    public Future<Integer> update(Capteur capteur){
+
         this.capteur = capteur;
         return scheduler.schedule(()->{
             try {
-                afficheur.update(this);
+                return afficheur.update(this);
             } catch (ExecutionException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }, random.nextInt(1, 2000), TimeUnit.MILLISECONDS);
     }
 
+    public Future<Integer> getValue(Afficheur afficheur) {
 
-    public Future<Integer> getValue() {
         return scheduler.schedule(
-                ()->{return capteur.getValue();},
+                ()->{return capteur.getValue(afficheur);},
                 random.nextInt(1,2000),
                 TimeUnit.MILLISECONDS
         );
     }
-
 }

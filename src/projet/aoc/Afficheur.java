@@ -5,15 +5,17 @@ import java.util.concurrent.Future;
 
 public class Afficheur {
     String name;
+
     Afficheur(String name){
         this.name = name;
     };
-    void update(Canal canal) throws ExecutionException, InterruptedException {
-        Future<Integer> future = canal.getValue();
+    Integer update(Canal canal) throws ExecutionException, InterruptedException {
+        Future<Integer> future = canal.getValue(this);
         while(!future.isDone()) {
             Thread.sleep(1000);
         }
         System.out.println(this.name + " : " + future.get() + " " );
+        return future.get();
     }
 
 }
